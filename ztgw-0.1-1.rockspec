@@ -5,6 +5,7 @@ supported_platforms = {"linux"}
 source = {
     url = "git://github.com/chengfangang/ztgw",
     tag = "v0.11",
+    branch="dev",
 }
 
 description = {
