@@ -1,10 +1,10 @@
-ARG ENABLE_PROXY=false
+ARG ENABLE_PROXY=true
 
 FROM openresty/openresty:1.19.3.1-alpine-fat AS production-stage
 COPY ztgw-0.1-5.rockspec .
-ARG ENABLE_PROXY
+
 RUN set -x \
-    && (test "${ENABLE_PROXY}" != "true" || RUN sed -i 's/https/http/' /etc/apk/repositories || /bin/sed -i 's,http://dl-cdn.alpinelinux.org,https://mirrors.aliyun.com,g' /etc/apk/repositories) \
+    && (test "${ENABLE_PROXY}" != "true" || /bin/sed -i 's,https://dl-cdn.alpinelinux.org,https://mirrors.aliyun.com,g' /etc/apk/repositories) \
     && apk add --no-cache --virtual .builddeps \
     automake \
     autoconf \
@@ -22,10 +22,9 @@ RUN set -x \
 
 FROM alpine:3.13 AS last-stage
 
-ARG ENABLE_PROXY
 # add runtime for  ztgw
 RUN set -x \
-    && (test "${ENABLE_PROXY}" != "true" || /bin/sed -i 's,http://dl-cdn.alpinelinux.org,https://mirrors.aliyun.com,g' /etc/apk/repositories) \
+    && (test "${ENABLE_PROXY}" != "true" || /bin/sed -i 's,https://dl-cdn.alpinelinux.org,https://mirrors.aliyun.com,g' /etc/apk/repositories) \
     && apk add --no-cache bash libstdc++ curl tzdata
 
 WORKDIR /usr/local/ztgw
