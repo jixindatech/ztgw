@@ -1,0 +1,54 @@
+#!/bin/bash
+
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+if [ -s './ztgw/cli/ztgw.lua' ]; then
+    # install via source
+    APISIX_LUA=./ztgw/cli/ztgw.lua
+elif [ -s '/usr/local/share/lua/5.1/ztgw/cli/ztgw.lua' ]; then
+    # install via luarock
+    APISIX_LUA=/usr/local/share/lua/5.1/ztgw/cli/ztgw.lua
+elif [ -s '/usr/local/ztgw/deps/share/lua/5.1/ztgw/cli/ztgw.lua' ]; then
+    # install via shell
+    APISIX_LUA=/usr/local/ztgw/deps/share/lua/5.1/ztgw/cli/ztgw.lua
+else
+    # install via official rpm or docker
+    APISIX_LUA=/usr/local/ztgw/ztgw/cli/apisix.lua
+fi
+
+# find the openresty
+OR_BIN=$(which openresty || exit 1)
+OR_EXEC=${OR_BIN:-'/usr/local/openresty-debug/bin/openresty'}
+OR_VER=$(openresty -v 2>&1 | awk -F '/' '{print $2}' | awk -F '.' '{print $1"."$2}')
+LUA_VERSION=$(lua -v 2>&1| grep -E -o  "Lua [0-9]+.[0-9]+")
+
+if [[ -e $OR_EXEC && "$OR_VER" =~ "1.19" ]]; then
+    # OpenResty version is 1.19, use luajit by default
+    # find the luajit binary of openresty
+    LUAJIT_BIN=$(${OR_EXEC} -V 2>&1 | grep prefix | grep -Eo 'prefix=(.*)/nginx\s+--' | grep -Eo '/.*/')luajit/bin/luajit
+
+    # use the luajit of openresty
+    echo "$LUAJIT_BIN $APISIX_LUA $*"
+    exec $LUAJIT_BIN $APISIX_LUA $*
+elif [[ "$LUA_VERSION" =~ "Lua 5.1" ]]; then
+    # OpenResty version is not 1.19, use Lua 5.1 by default
+    echo "lua $APISIX_LUA $*"
+    exec lua $APISIX_LUA $*
+else
+    echo "ERROR: Please check the version of OpenResty and Lua, OpenResty 1.19 + LuaJIT or OpenResty before 1.19 + Lua 5.1 is required for Apache APISIX."
+fi

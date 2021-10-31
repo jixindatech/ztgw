@@ -1,0 +1,34 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "properties": {
+      "user": {
+        "type": "text"
+      },
+      "ip": {
+        "type": "text"
+      },
+      "resource": {
+        "type": "text"
+      },
+      "method": {
+        "type": "text"
+      },
+      "body": {
+        "type": "text"
+      },
+      "time": {
+        "type": "integer"
+      },
+      "status": {
+        "type": "text"
+      },
+      "msg": {
+        "type": "text"
+      }
+    }
+  }
+}
