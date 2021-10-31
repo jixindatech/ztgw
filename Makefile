@@ -275,7 +275,7 @@ install: default
 	$(INSTALL) ztgw/utils/*.lua $(INST_LUADIR)/ztgw/utils/
 #
 #	$(INSTALL) README.md $(INST_CONFDIR)/README.md
-	$(INSTALL) bin/apisix $(INST_BINDIR)/apisix
+	$(INSTALL) bin/ztgw $(INST_BINDIR)/ztgw
 #
 #	$(INSTALL) -d $(INST_LUADIR)/apisix/plugins/slslog
 #	$(INSTALL) apisix/plugins/slslog/*.lua $(INST_LUADIR)/apisix/plugins/slslog/
