@@ -1,16 +1,16 @@
 package = "ztgw"
-version = "0.1-2"
+version = "0.1-3"
 supported_platforms = {"linux"}
 
 source = {
-    url = "git://github.com/chengfangang/ztgw",
-    tag = "v0.12",
+    url = "git://github.com/jixindatech/ztgw",
+    tag = "v0.13",
     branch="dev",
 }
 
 description = {
     summary = "zero trust gateway.",
-    homepage = "https://github.com/chengfangang/ztgw",
+    homepage = "https://github.com/jixindatech/ztgw",
     maintainer = "Fangang Cheng <chengfangang@qq.com>"
 }
 
