@@ -1,10 +1,10 @@
 package = "ztgw"
-version = "0.1-1"
+version = "0.1-2"
 supported_platforms = {"linux"}
 
 source = {
     url = "git://github.com/chengfangang/ztgw",
-    tag = "v0.11",
+    tag = "v0.12",
     branch="dev",
 }
 
