@@ -1,7 +1,7 @@
 ARG ENABLE_PROXY=false
 
 FROM openresty/openresty:1.19.3.1-alpine-fat AS production-stage
-COPY ztgw-0.1-0.rockspec .
+COPY ztgw-0.1-1.rockspec .
 ARG ENABLE_PROXY
 RUN set -x \
     && (test "${ENABLE_PROXY}" != "true" || RUN sed -i 's/https/http/' /etc/apk/repositories || /bin/sed -i 's,http://dl-cdn.alpinelinux.org,https://mirrors.aliyun.com,g' /etc/apk/repositories) \
@@ -16,7 +16,7 @@ RUN set -x \
     && luarocks config variables.OPENSSL_LIBDIR /usr/local/openresty/openssl/lib \
     && luarocks config variables.OPENSSL_INCDIR /usr/local/openresty/openssl/include \
     && luarocks install ztgw-0.1-0.rockspec --tree=/usr/local/ztgw/deps \
-    && cp -v /usr/local/ztgw/deps/lib/luarocks/rocks-5.1/ztgw/master-0/bin/ztgw /usr/bin/ \
+    && cp -v /usr/local/ztgw/deps/lib/luarocks/rocks-5.1/ztgw/0.1-1/bin/ztgw /usr/bin/ \
     && mv /usr/local/ztgw/deps/share/lua/5.1/ztgw /usr/local/ztgw \
     && apk del .builddeps build-base make unzip
 
