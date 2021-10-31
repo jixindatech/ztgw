@@ -15,7 +15,7 @@ RUN set -x \
     && mkdir ~/.luarocks \
     && luarocks config variables.OPENSSL_LIBDIR /usr/local/openresty/openssl/lib \
     && luarocks config variables.OPENSSL_INCDIR /usr/local/openresty/openssl/include \
-    && luarocks install ztgw-0.1-0.rockspec --tree=/usr/local/ztgw/deps \
+    && luarocks install ztgw-0.1-1.rockspec --tree=/usr/local/ztgw/deps \
     && cp -v /usr/local/ztgw/deps/lib/luarocks/rocks-5.1/ztgw/0.1-1/bin/ztgw /usr/bin/ \
     && mv /usr/local/ztgw/deps/share/lua/5.1/ztgw /usr/local/ztgw \
     && apk del .builddeps build-base make unzip
