@@ -31,16 +31,16 @@ function _M.init_worker()
         return "log type is missing"
     end
 
-    if module.config.log.kafka.broker ~= nil then
+    if module.config.log.kafka ~= nil and module.config.log.kafka.broker ~= nil then
         for _, item in pairs(module.config.log.kafka.broker) do
             table_insert(broker_list, item)
         end
-    end
-    if #broker_list == 0 then
-        return "kafka configuration is missing"
-    end
+        if #broker_list == 0 then
+            return "kafka configuration is missing"
+        end
 
-    kafka_topic = module.config.log.kafka.topic or "ztgw"
+        kafka_topic = module.config.log.kafka.topic or "ztgw"
+    end
 
 end
 
