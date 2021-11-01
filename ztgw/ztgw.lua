@@ -13,7 +13,7 @@ local seed = ngx.time()
 
 local _M = {version = 0.1}
 
-local config_path =  ngx.config.prefix() .. "conf/config.yaml"
+local config_path =  ngx.config.prefix() .. "etc/config.yaml"
 
 function _M.http_init()
     require("resty.core")

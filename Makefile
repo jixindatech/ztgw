@@ -195,10 +195,11 @@ install: default
 	@echo "install/default"
 	$(INSTALL) -d /usr/local/ztgw/
 	$(INSTALL) -d /usr/local/ztgw/logs/
+	$(INSTALL) -d /usr/local/ztgw/etc/
 	$(INSTALL) -d /usr/local/ztgw/conf/cert
 	$(INSTALL) conf/nginx.conf /usr/local/ztgw/conf/nginx.conf
 	$(INSTALL) conf/mime.types /usr/local/ztgw/conf/mime.types
-	$(INSTALL) conf/config.yaml /usr/local/ztgw/conf/config.yaml
+	$(INSTALL) etc/config.yaml /usr/local/ztgw/etc/config.yaml
 #	$(INSTALL) conf/config-default.yaml /usr/local/apisix/conf/config-default.yaml
 #	$(INSTALL) conf/debug.yaml /usr/local/apisix/conf/debug.yaml
 	$(INSTALL) conf/cert/* /usr/local/ztgw/conf/cert/
