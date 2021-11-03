@@ -55,12 +55,12 @@ function _M.init_worker()
 end
 
 local function parse_token(secret, token)
-    local email, err = aes.decrypt(secret, token)
+    local data, err = aes.decrypt(secret, token)
     if err ~= nil then
         return nil, err
     end
 
-    return email, nil
+    return  json.decode(data)
 end
 
 local function get_email_info(email)
@@ -119,15 +119,18 @@ function _M.run(ctx)
     msg.body = ""
     local secret = module.config.secret
     if secret then
-        local email = parse_token(secret, token)
-        local data, stale_data, flags = module.cache:get(email)
-        msg.user = email
+        local user, err = parse_token(secret, token)
+        if err ~= nil or user == nil then
+            ngx.exit(forbidden_code)
+        end
+        local data, stale_data, flags = module.cache:get(user.email)
+        msg.user = user.email
         msg.ip = ngx.var.remote_addr
         if data ~= nil then
-            if data[server] ~= nil then
+            if data.resource[server] ~= nil then
                 read_body()
-                local data = get_body() or ""
-                msg.body = data
+                local body = get_body() or ""
+                msg.body = body
                 return
             else
                 msg.status = "fail"
@@ -135,16 +138,16 @@ function _M.run(ctx)
             end
         end
 
-        local data, err = get_email_info(email)
+        local data, err = get_email_info(user.email)
         if data ==nil or err ~= nil then
             msg.status = "fail"
             ngx.log(ngx.ERR, err)
             ngx.exit(500)
         end
 
-        module.cache:set(email, data, ttl)
+        module.cache:set(user.email, data, ttl)
 
-        if data[server] ~= nil then
+        if data.resource[server] ~= nil then
             return
         else
             msg.status = "fail"

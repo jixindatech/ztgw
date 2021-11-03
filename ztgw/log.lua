@@ -31,7 +31,7 @@ function _M.init_worker()
         return "log type is missing"
     end
 
-    if module.config.log.kafka ~= nil and module.config.log.kafka.broker ~= nil then
+    if module.config.log.kafka and module.config.log.kafka.broker ~= nil then
         for _, item in pairs(module.config.log.kafka.broker) do
             table_insert(broker_list, item)
         end
@@ -71,14 +71,7 @@ local function rsyslog(msg)
         end
     end
 
-    local logstr = " user=" .. msg.user ..
-            " method=" .. msg.method ..
-            " resource=" .. msg.resource ..
-            " body=" .. msg.body ..
-            " time=" .. tostring(msg.time) ..
-            " status=" .. msg.status ..
-            " ip=" .. msg.ip .. "\n"
-
+    local logstr = cjson.encode(msg)
     local bytes, err = logger.log(logstr)
     if err then
         ngx.log(ngx.ERR, "failed to log message: ", err)
@@ -104,12 +97,10 @@ function _M.run(ctx)
             rsyslog(msg)
         end
 
-        --if module and module.config.log.kafka then
-        --    kafkalog(msg)
-        --end
+        if module and module.config.log.kafka then
+            kafkalog(msg)
+        end
     end
-
-
 end
 
 return _M
