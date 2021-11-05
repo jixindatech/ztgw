@@ -1,7 +1,7 @@
 ARG ENABLE_PROXY=true
 
 FROM openresty/openresty:1.19.3.1-alpine-fat AS production-stage
-COPY ztgw-0.1-5.rockspec .
+COPY rockspec/ztgw-0.1-0.rockspec .
 ARG ENABLE_PROXY=true
 RUN set -x \
     && (test "${ENABLE_PROXY}" != "true" || /bin/sed -i 's,https://dl-cdn.alpinelinux.org,https://mirrors.aliyun.com,g' /etc/apk/repositories) \
@@ -15,8 +15,8 @@ RUN set -x \
     && mkdir ~/.luarocks \
     && luarocks config variables.OPENSSL_LIBDIR /usr/local/openresty/openssl/lib \
     && luarocks config variables.OPENSSL_INCDIR /usr/local/openresty/openssl/include \
-    && luarocks install ztgw-0.1-5.rockspec --tree=/usr/local/ztgw/deps \
-    && cp -v /usr/local/ztgw/deps/lib/luarocks/rocks-5.1/ztgw/0.1-5/bin/ztgw /usr/bin/ \
+    && luarocks install ztgw-0.1-0.rockspec --tree=/usr/local/ztgw/deps \
+    && cp -v /usr/local/ztgw/deps/lib/luarocks/rocks-5.1/ztgw/0.1-0/bin/ztgw /usr/bin/ \
     && mv /usr/local/ztgw/deps/share/lua/5.1/ztgw /usr/local/ztgw \
     && apk del .builddeps build-base make unzip
 
@@ -41,6 +41,7 @@ RUN ln -sf /dev/stdout /usr/local/ztgw/logs/access.log \
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
 
 EXPOSE 8080
+EXPOSE 8443
 
 CMD ["sh", "-c", "/usr/local/openresty/bin/openresty -p /usr/local/ztgw -g 'daemon off;'"]
 

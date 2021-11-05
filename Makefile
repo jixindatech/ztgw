@@ -1,20 +1,3 @@
-#
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
 INST_PREFIX ?= /usr
 INST_LIBDIR ?= $(INST_PREFIX)/lib64/lua/5.1
 INST_LUADIR ?= $(INST_PREFIX)/share/lua/5.1
@@ -71,13 +54,13 @@ endif
 SHELL := /bin/bash -o pipefail
 
 VERSION ?= latest
-RELEASE_SRC = apache-apisix-${VERSION}-src
+RELEASE_SRC = apache-ztgw-${VERSION}-src
 
 .PHONY: default
 default:
 ifeq ($(OR_EXEC), )
 	ifeq ("$(wildcard /usr/local/openresty-debug/bin/openresty)", "")
-		@echo "WARNING: OpenResty not found. You have to install OpenResty and add the binary file to PATH before install Apache APISIX."
+		@echo "WARNING: OpenResty not found. You have to install OpenResty and add the binary file to PATH before install ztgw."
 		exit 1
 	else
 		OR_EXEC=/usr/local/openresty-debug/bin/openresty
@@ -108,68 +91,38 @@ else
 	$(LUAROCKS) config --local variables.OPENSSL_LIBDIR $(addprefix $(OPENSSL_PREFIX), /lib)
 	$(LUAROCKS) config --local variables.OPENSSL_INCDIR $(addprefix $(OPENSSL_PREFIX), /include)
 endif
-	$(LUAROCKS) install rockspec/apisix-master-0.rockspec --tree=deps --only-deps --local $(LUAROCKS_SERVER_OPT)
+	$(LUAROCKS) install rockspec/ztgw-0.1-0.rockspec --tree=deps --only-deps --local $(LUAROCKS_SERVER_OPT)
 else
 	@echo "WARN: You're not using LuaRocks 3.x, please add the following items to your LuaRocks config file:"
 	@echo "variables = {"
 	@echo "    OPENSSL_LIBDIR=$(addprefix $(OPENSSL_PREFIX), /lib)"
 	@echo "    OPENSSL_INCDIR=$(addprefix $(OPENSSL_PREFIX), /include)"
 	@echo "}"
-	luarocks install rockspec/apisix-master-0.rockspec --tree=deps --only-deps --local $(LUAROCKS_SERVER_OPT)
+	luarocks install rockspec/ztgw-0.1-0.rockspec --tree=deps --only-deps --local $(LUAROCKS_SERVER_OPT)
 endif
 
-
-### utils:            Installation tools
-.PHONY: utils
-utils:
-ifeq ("$(wildcard utils/lj-releng)", "")
-	wget -P utils https://raw.githubusercontent.com/iresty/openresty-devel-utils/master/lj-releng
-	chmod a+x utils/lj-releng
-endif
-ifeq ("$(wildcard utils/reindex)", "")
-	wget -P utils https://raw.githubusercontent.com/iresty/openresty-devel-utils/master/reindex
-	chmod a+x utils/reindex
-endif
-
-
-### lint:             Lint source code
-.PHONY: lint
-lint: utils
-	@echo "utils/lint ./utils/check-lua-code-style.sh ./utils/check-test-code-style.sh"
-#	./utils/check-lua-code-style.sh
-#	./utils/check-test-code-style.sh
-
-
-### init:             Initialize the runtime environment
-.PHONY: init
-init: default
-	@echo "init/default ./bin/apisix init ./bin/apisix init_etcd"
-#	./bin/apisix init
-#	./bin/apisix init_etcd
-
-
-### run:              Start the apisix server
-.PHONY: run
+### start:              Start the ztgw server
+.PHONY: start
 run: default
-	@echo "run/default ./bin/apisix start"
+	@echo "./bin/ztgw start"
 	./bin/ztgw start
 
 
-### quit:             Stop the apisix server, exit gracefully
-.PHONY: quit
+### restart:             Restart the ztgw server, exit gracefully
+.PHONY: restart
 quit: default
-	@echo "quit/default ./bin/apisix quit"
-#	./bin/apisix quit
+	@echo "./bin/ztgw restart"
+	./bin/ztgw restart
 
 
-### stop:             Stop the apisix server, exit immediately
+### stop:             Stop the ztgw server, exit immediately
 .PHONY: stop
 stop: default
-	@echo "stop/default ./bin/apisix stop"
-#	./bin/apisix stop
+	@echo "./bin/ztgw stop"
+	./bin/ztgw stop
 
 
-### verify:           Verify the configuration of apisix server
+### verify:           Verify the configuration of ztgw server
 .PHONY: verify
 verify: default
 	$(OR_EXEC) -p $$PWD/ -c $$PWD/conf/nginx.conf -t
@@ -179,17 +132,17 @@ verify: default
 .PHONY: clean
 clean:
 	@echo "clean rm -rf logs"
-#	rm -rf logs/
+	rm -rf logs/
 
 
-### reload:           Reload the apisix server
+### reload:           Reload the ztgw server
 .PHONY: reload
 reload: default
 	@echo "reload/default $(OR_EXEC) -p $$PWD/  -c $$PWD/conf/nginx.conf -s reload"
-#	$(OR_EXEC) -p $$PWD/  -c $$PWD/conf/nginx.conf -s reload
+	$(OR_EXEC) -p $$PWD/  -c $$PWD/conf/nginx.conf -s reload
 
 
-### install:          Install the apisix (only for luarocks)
+### install:          Install the ztgw (only for luarocks)
 .PHONY: install
 install: default
 	@echo "install/default"
@@ -200,121 +153,18 @@ install: default
 	$(INSTALL) conf/nginx.conf /usr/local/ztgw/conf/nginx.conf
 	$(INSTALL) conf/mime.types /usr/local/ztgw/conf/mime.types
 	$(INSTALL) etc/config.yaml /usr/local/ztgw/etc/config.yaml
-#	$(INSTALL) conf/config-default.yaml /usr/local/apisix/conf/config-default.yaml
-#	$(INSTALL) conf/debug.yaml /usr/local/apisix/conf/debug.yaml
 	$(INSTALL) conf/cert/* /usr/local/ztgw/conf/cert/
-#
+
 	$(INSTALL) -d $(INST_LUADIR)/ztgw
 	$(INSTALL) ztgw/*.lua $(INST_LUADIR)/ztgw/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/admin
-#	$(INSTALL) apisix/admin/*.lua $(INST_LUADIR)/apisix/admin/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/balancer
-#	$(INSTALL) apisix/balancer/*.lua $(INST_LUADIR)/apisix/balancer/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/control
-#	$(INSTALL) apisix/control/*.lua $(INST_LUADIR)/apisix/control/
-#
+
+
 	$(INSTALL) -d $(INST_LUADIR)/ztgw/core
 	$(INSTALL) ztgw/core/*.lua $(INST_LUADIR)/ztgw/core/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/core/dns
-#	$(INSTALL) apisix/core/dns/*.lua $(INST_LUADIR)/apisix/core/dns
-#
+
 	$(INSTALL) -d $(INST_LUADIR)/ztgw/cli
 	$(INSTALL) ztgw/cli/*.lua $(INST_LUADIR)/ztgw/cli/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/discovery
-#	$(INSTALL) apisix/discovery/*.lua $(INST_LUADIR)/apisix/discovery/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/http
-#	$(INSTALL) apisix/http/*.lua $(INST_LUADIR)/apisix/http/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/http/router
-#	$(INSTALL) apisix/http/router/*.lua $(INST_LUADIR)/apisix/http/router/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/plugins
-#	$(INSTALL) apisix/plugins/*.lua $(INST_LUADIR)/apisix/plugins/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/plugins/ext-plugin
-#	$(INSTALL) apisix/plugins/ext-plugin/*.lua $(INST_LUADIR)/apisix/plugins/ext-plugin/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/plugins/grpc-transcode
-#	$(INSTALL) apisix/plugins/grpc-transcode/*.lua $(INST_LUADIR)/apisix/plugins/grpc-transcode/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/plugins/ip-restriction
-#	$(INSTALL) apisix/plugins/ip-restriction/*.lua $(INST_LUADIR)/apisix/plugins/ip-restriction/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/plugins/limit-conn
-#	$(INSTALL) apisix/plugins/limit-conn/*.lua $(INST_LUADIR)/apisix/plugins/limit-conn/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/plugins/limit-count
-#	$(INSTALL) apisix/plugins/limit-count/*.lua $(INST_LUADIR)/apisix/plugins/limit-count/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/plugins/prometheus
-#	$(INSTALL) apisix/plugins/prometheus/*.lua $(INST_LUADIR)/apisix/plugins/prometheus/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/plugins/serverless
-#	$(INSTALL) apisix/plugins/serverless/*.lua $(INST_LUADIR)/apisix/plugins/serverless/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/plugins/zipkin
-#	$(INSTALL) apisix/plugins/zipkin/*.lua $(INST_LUADIR)/apisix/plugins/zipkin/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/ssl/router
-#	$(INSTALL) apisix/ssl/router/*.lua $(INST_LUADIR)/apisix/ssl/router/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/stream/plugins
-#	$(INSTALL) apisix/stream/plugins/*.lua $(INST_LUADIR)/apisix/stream/plugins/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/stream/router
-#	$(INSTALL) apisix/stream/router/*.lua $(INST_LUADIR)/apisix/stream/router/
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/utils
-#	$(INSTALL) apisix/utils/*.lua $(INST_LUADIR)/apisix/utils/
 	$(INSTALL) -d $(INST_LUADIR)/ztgw/utils
 	$(INSTALL) ztgw/utils/*.lua $(INST_LUADIR)/ztgw/utils/
-#
-#	$(INSTALL) README.md $(INST_CONFDIR)/README.md
+
 	$(INSTALL) bin/ztgw $(INST_BINDIR)/ztgw
-#
-#	$(INSTALL) -d $(INST_LUADIR)/apisix/plugins/slslog
-#	$(INSTALL) apisix/plugins/slslog/*.lua $(INST_LUADIR)/apisix/plugins/slslog/
-
-
-### test:             Run the test case
-.PHONY: test
-test:
-	@echo "test git submodule update --init --recursive prove -I../test-nginx/lib -I./ -r -s t/"
-#	git submodule update --init --recursive
-#	prove -I../test-nginx/lib -I./ -r -s t/
-
-### license-check:    Check Lua source code for Apache License
-.PHONY: license-check
-license-check:
-	@echo "license-check docker run -it --rm -v $(shell pwd):/github/workspace apache/skywalking-eyes header check"
-#	docker run -it --rm -v $(shell pwd):/github/workspace apache/skywalking-eyes header check
-
-.PHONY: release-src
-release-src: compress-tar
-	@echo "release-src/compress-tar"
-#	gpg --batch --yes --armor --detach-sig $(RELEASE_SRC).tgz
-#	shasum -a 512 $(RELEASE_SRC).tgz > $(RELEASE_SRC).tgz.sha512
-
-#	mv $(RELEASE_SRC).tgz release/$(RELEASE_SRC).tgz
-#	mv $(RELEASE_SRC).tgz.asc release/$(RELEASE_SRC).tgz.asc
-#	mv $(RELEASE_SRC).tgz.sha512 release/$(RELEASE_SRC).tgz.sha512
-
-.PHONY: compress-tar
-compress-tar:
-	@echo "compress-tar/compress-tar"
-#	tar -zcvf $(RELEASE_SRC).tgz \
-#	./apisix \
-#	./bin \
-#	./conf \
-#	./rockspec/apisix-$(VERSION)-*.rockspec \
-#	./rockspec/apisix-master-0.rockspec \
-#	LICENSE \
-#	Makefile \
-#	NOTICE \
-#	*.md
