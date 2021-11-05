@@ -72,7 +72,7 @@ local function rsyslog(msg)
     end
 
     local logstr = cjson.encode(msg)
-    local bytes, err = logger.log(logstr)
+    local bytes, err = logger.log(logstr.."\n")
     if err then
         ngx.log(ngx.ERR, "failed to log message: ", err)
         return
