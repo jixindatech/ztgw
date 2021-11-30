@@ -26,7 +26,6 @@ show:
 	@echo ${OR_PREFIX}
 	@echo ${OPENSSL_PREFIX}
 	@echo ${HOMEBREW_PREFIX}
-	@echo "show is done"
 
 # OpenResty 1.17.8 or higher version uses openssl111 as the openssl dirname.
 ifeq ($(shell test -d $(addprefix $(OR_PREFIX), openssl111) && echo -n yes), yes)
@@ -54,7 +53,7 @@ endif
 SHELL := /bin/bash -o pipefail
 
 VERSION ?= latest
-RELEASE_SRC = apache-ztgw-${VERSION}-src
+RELEASE_SRC = ztgw-${VERSION}-src
 
 .PHONY: default
 default:
@@ -101,24 +100,26 @@ else
 	luarocks install rockspec/ztgw-0.1-0.rockspec --tree=deps --only-deps --local $(LUAROCKS_SERVER_OPT)
 endif
 
+### init:             Initialize the runtime environment
+.PHONY: init
+init: default
+	./bin/ztgw init
+
 ### start:              Start the ztgw server
 .PHONY: start
-run: default
-	@echo "./bin/ztgw start"
+start: default
 	./bin/ztgw start
 
 
 ### restart:             Restart the ztgw server, exit gracefully
 .PHONY: restart
 quit: default
-	@echo "./bin/ztgw restart"
 	./bin/ztgw restart
 
 
 ### stop:             Stop the ztgw server, exit immediately
 .PHONY: stop
 stop: default
-	@echo "./bin/ztgw stop"
 	./bin/ztgw stop
 
 
@@ -138,14 +139,12 @@ clean:
 ### reload:           Reload the ztgw server
 .PHONY: reload
 reload: default
-	@echo "reload/default $(OR_EXEC) -p $$PWD/  -c $$PWD/conf/nginx.conf -s reload"
 	$(OR_EXEC) -p $$PWD/  -c $$PWD/conf/nginx.conf -s reload
 
 
 ### install:          Install the ztgw (only for luarocks)
 .PHONY: install
 install: default
-	@echo "install/default"
 	$(INSTALL) -d /usr/local/ztgw/
 	$(INSTALL) -d /usr/local/ztgw/logs/
 	$(INSTALL) -d /usr/local/ztgw/etc/

@@ -1,8 +1,8 @@
-local io_open = io.open
-
 local require = require
+local io_open = io.open
 local yaml = require("tinyyaml")
 local config_redis = require("ztgw.core.config_redis")
+local config_yaml = require("ztgw.core.config_yaml")
 
 local _M = { version=0.1 }
 
@@ -31,22 +31,35 @@ function _M.load_conf(path)
     return err
 end
 
-function _M.new(name, options)
-    if modules and modules[name] ~= nil then
-        return nil, "already exist module:" .. name
+function _M.get_config_type()
+    if config_data then
+        return config_data.config_type
     end
 
-    if config_data and config_data.type == "redis" then
-        local module, err = config_redis.new(name, config_data, options)
-        if err ~= nil then
-            return nil, err
+    return nil
+end
+
+function _M.new(name, options)
+    if config_data then
+        if config_data.config_type == "redis" then
+            local module, err = config_redis.new(name, config_data, options)
+            if err ~= nil then
+                return nil, err
+            end
+
+            return module, nil
+        elseif config_data.config_type == "yaml" then
+            local module, err = config_yaml.new(name, config_data, options)
+            if err ~= nil then
+                return nil, err
+            end
+
+            return module, nil
+        else
+            return nil, "wrong config_type"
         end
-
-        modules[name] = module
-
-        return module, nil
     else
-        return nil, "config data is empty or wrong config type"
+        return nil, "config data is empty or wrong config_type"
     end
 end
 
