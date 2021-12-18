@@ -4,16 +4,16 @@ redis:
   password: 123456
   db: 0
 
-config_type: redis
-ztgw:
-  node_listen: 9080              # APISIX listening port
+config_type: yaml
+gw:
+  node_listen: 9080              # listening port
   enable_heartbeat: true
   enable_debug: false
   enable_dev_mode: true          # Sets nginx worker_processes to 1 if set to true
   enable_reuseport: true          # Enable nginx SO_REUSEPORT switch if set to true.
   enable_ipv6: true
   config_center: etcd             # etcd: use etcd to store the config value
-    # yaml: fetch the config value from local yaml file `/your_path/conf/apisix.yaml`
+    # yaml: fetch the config value from local yaml file `/your_path/conf/gw.yaml`
 
     #proxy_protocol:                 # Proxy Protocol configuration
     #  listen_http_port: 9181        # The port with proxy protocol for http, it differs from node_listen and port_admin.

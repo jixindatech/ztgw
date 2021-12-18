@@ -1,11 +1,12 @@
 local require = require
 local cjson = require("cjson.safe")
-local config = require("ztgw.core.config")
-local gw = require("ztgw.plugins.gw")
+local config = require("gw.core.config")
+local zt = require("gw.plugins.zt")
 
 
 local _M = {}
-local local_plugins = { gw }
+-- local local_plugins = { zt }
+local local_plugins = { }
 local function plugin_init_worker()
     for _, item in ipairs(local_plugins) do
         if item.init_worker then

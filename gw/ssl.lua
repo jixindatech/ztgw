@@ -6,8 +6,8 @@ local require = require
 local cjson = require("cjson.safe")
 local ngx_ssl = require("ngx.ssl")
 local radixtree = require("resty.radixtree")
-local config = require("ztgw.core.config")
-local schema = require("ztgw.schema")
+local config = require("gw.core.config")
+local schema = require("gw.schema")
 
 local _M = {version = "0.1" }
 

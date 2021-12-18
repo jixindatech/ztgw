@@ -53,13 +53,13 @@ endif
 SHELL := /bin/bash -o pipefail
 
 VERSION ?= latest
-RELEASE_SRC = ztgw-${VERSION}-src
+RELEASE_SRC = gw-${VERSION}-src
 
 .PHONY: default
 default:
 ifeq ($(OR_EXEC), )
 	ifeq ("$(wildcard /usr/local/openresty-debug/bin/openresty)", "")
-		@echo "WARNING: OpenResty not found. You have to install OpenResty and add the binary file to PATH before install ztgw."
+		@echo "WARNING: OpenResty not found. You have to install OpenResty and add the binary file to PATH before install gw."
 		exit 1
 	else
 		OR_EXEC=/usr/local/openresty-debug/bin/openresty
@@ -90,40 +90,40 @@ else
 	$(LUAROCKS) config --local variables.OPENSSL_LIBDIR $(addprefix $(OPENSSL_PREFIX), /lib)
 	$(LUAROCKS) config --local variables.OPENSSL_INCDIR $(addprefix $(OPENSSL_PREFIX), /include)
 endif
-	$(LUAROCKS) install rockspec/ztgw-0.1-0.rockspec --tree=deps --only-deps --local $(LUAROCKS_SERVER_OPT)
+	$(LUAROCKS) install rockspec/gw-0.1-0.rockspec --tree=deps --only-deps --local $(LUAROCKS_SERVER_OPT)
 else
 	@echo "WARN: You're not using LuaRocks 3.x, please add the following items to your LuaRocks config file:"
 	@echo "variables = {"
 	@echo "    OPENSSL_LIBDIR=$(addprefix $(OPENSSL_PREFIX), /lib)"
 	@echo "    OPENSSL_INCDIR=$(addprefix $(OPENSSL_PREFIX), /include)"
 	@echo "}"
-	luarocks install rockspec/ztgw-0.1-0.rockspec --tree=deps --only-deps --local $(LUAROCKS_SERVER_OPT)
+	luarocks install rockspec/gw-0.1-0.rockspec --tree=deps --only-deps --local $(LUAROCKS_SERVER_OPT)
 endif
 
 ### init:             Initialize the runtime environment
 .PHONY: init
 init: default
-	./bin/ztgw init
+	./bin/gw init
 
-### start:              Start the ztgw server
+### start:              Start the gw server
 .PHONY: start
 start: default
-	./bin/ztgw start
+	./bin/gw start
 
 
-### restart:             Restart the ztgw server, exit gracefully
+### restart:             Restart the gw server, exit gracefully
 .PHONY: restart
 quit: default
-	./bin/ztgw restart
+	./bin/gw restart
 
 
-### stop:             Stop the ztgw server, exit immediately
+### stop:             Stop the gw server, exit immediately
 .PHONY: stop
 stop: default
-	./bin/ztgw stop
+	./bin/gw stop
 
 
-### verify:           Verify the configuration of ztgw server
+### verify:           Verify the configuration of gw server
 .PHONY: verify
 verify: default
 	$(OR_EXEC) -p $$PWD/ -c $$PWD/conf/nginx.conf -t
@@ -136,34 +136,34 @@ clean:
 	rm -rf logs/
 
 
-### reload:           Reload the ztgw server
+### reload:           Reload the gw server
 .PHONY: reload
 reload: default
 	$(OR_EXEC) -p $$PWD/  -c $$PWD/conf/nginx.conf -s reload
 
 
-### install:          Install the ztgw (only for luarocks)
+### install:          Install the gw (only for luarocks)
 .PHONY: install
 install: default
-	$(INSTALL) -d /usr/local/ztgw/
-	$(INSTALL) -d /usr/local/ztgw/logs/
-	$(INSTALL) -d /usr/local/ztgw/etc/
-	$(INSTALL) -d /usr/local/ztgw/conf/cert
-	$(INSTALL) conf/nginx.conf /usr/local/ztgw/conf/nginx.conf
-	$(INSTALL) conf/mime.types /usr/local/ztgw/conf/mime.types
-	$(INSTALL) etc/config.yaml /usr/local/ztgw/etc/config.yaml
-	$(INSTALL) conf/cert/* /usr/local/ztgw/conf/cert/
+	$(INSTALL) -d /usr/local/gw/
+	$(INSTALL) -d /usr/local/gw/logs/
+	$(INSTALL) -d /usr/local/gw/etc/
+	$(INSTALL) -d /usr/local/gw/conf/cert
+	$(INSTALL) conf/nginx.conf /usr/local/gw/conf/nginx.conf
+	$(INSTALL) conf/mime.types /usr/local/gw/conf/mime.types
+	$(INSTALL) etc/config.yaml /usr/local/gw/etc/config.yaml
+	$(INSTALL) conf/cert/* /usr/local/gw/conf/cert/
 
-	$(INSTALL) -d $(INST_LUADIR)/ztgw
-	$(INSTALL) ztgw/*.lua $(INST_LUADIR)/ztgw/
+	$(INSTALL) -d $(INST_LUADIR)/gw
+	$(INSTALL) gw/*.lua $(INST_LUADIR)/gw/
 
 
-	$(INSTALL) -d $(INST_LUADIR)/ztgw/core
-	$(INSTALL) ztgw/core/*.lua $(INST_LUADIR)/ztgw/core/
+	$(INSTALL) -d $(INST_LUADIR)/gw/core
+	$(INSTALL) gw/core/*.lua $(INST_LUADIR)/gw/core/
 
-	$(INSTALL) -d $(INST_LUADIR)/ztgw/cli
-	$(INSTALL) ztgw/cli/*.lua $(INST_LUADIR)/ztgw/cli/
-	$(INSTALL) -d $(INST_LUADIR)/ztgw/utils
-	$(INSTALL) ztgw/utils/*.lua $(INST_LUADIR)/ztgw/utils/
+	$(INSTALL) -d $(INST_LUADIR)/gw/cli
+	$(INSTALL) gw/cli/*.lua $(INST_LUADIR)/gw/cli/
+	$(INSTALL) -d $(INST_LUADIR)/gw/utils
+	$(INSTALL) gw/utils/*.lua $(INST_LUADIR)/gw/utils/
 
-	$(INSTALL) bin/ztgw $(INST_BINDIR)/ztgw
+	$(INSTALL) bin/gw $(INST_BINDIR)/gw

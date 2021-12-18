@@ -13,7 +13,7 @@ local ngx_sleep    = ngx.sleep
 local ngx_timer_at = ngx.timer.at
 local ngx_time     = ngx.time
 local exiting      = ngx.worker.exiting
-local ztgw_schema       = require("ztgw.schema")
+local ztgw_schema       = require("gw.schema")
 
 local cjson = require("cjson.safe")
 local redis = require("resty.redis")

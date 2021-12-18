@@ -18,7 +18,7 @@ local ngx_time     = ngx.time
 local exiting      = ngx.worker.exiting
 
 local json = require("cjson")
-local schema       = require("ztgw.schema")
+local schema       = require("gw.schema")
 local created_obj  = {}
 
 local _M = { version= 0.1 }
@@ -26,32 +26,33 @@ local _M = { version= 0.1 }
 local mt = {
     __index = _M,
     __tostring = function(self)
-        return " ztgw.yaml key: " .. self.key
+        return " gw.yaml key: " .. self.key
     end
 }
 
 local modules = {}
 
-local ztgw_yaml
-local ztgw_yaml_ctime
-local ztgw_yaml_path  = ngx.config.prefix() .. "etc/ztgw.yaml"
+local gw_yaml
+local gw_yaml_ctime
+local gw_yaml_path  = ngx.config.prefix() .. "etc/gw.yaml"
 
-local function read_ztgw_yaml(pre_mtime)
-    local attributes, err = lfs.attributes(ztgw_yaml_path)
+local function read_gw_yaml(pre_mtime)
+    ngx.log(ngx.ERR, gw_yaml_path)
+    local attributes, err = lfs.attributes(gw_yaml_path)
     if not attributes then
-        ngx.log(ngx.ERR, "failed to fetch ", ztgw_yaml_path, " attributes: ", err)
+        ngx.log(ngx.ERR, "failed to fetch ", gw_yaml_path, " attributes: ", err)
         return
     end
 
     -- log.info("change: ", json.encode(attributes))
     local last_change_time = attributes.change
-    if ztgw_yaml_ctime == last_change_time then
+    if gw_yaml_ctime == last_change_time then
         return
     end
 
-    local f, err = io.open(ztgw_yaml_path, "r")
+    local f, err = io.open(gw_yaml_path, "r")
     if not f then
-        ngx.log(ngx.ERR, "failed to open file ", ztgw_yaml_path, " : ", err)
+        ngx.log(ngx.ERR, "failed to open file ", gw_yaml_path, " : ", err)
         return
     end
 
@@ -68,7 +69,7 @@ local function read_ztgw_yaml(pre_mtime)
 
     if not found_end_flag then
         f:close()
-        ngx.log(ngx.WARN, "missing valid end flag in file ", ztgw_yaml_path)
+        ngx.log(ngx.WARN, "missing valid end flag in file ", gw_yaml_path)
         return
     end
 
@@ -76,14 +77,14 @@ local function read_ztgw_yaml(pre_mtime)
     local yaml_config = f:read("*a")
     f:close()
 
-    local ztgw_yaml_new = yaml.parse(yaml_config)
-    if not ztgw_yaml_new then
-        ngx.log(ngx.ERR, "failed to parse the content of file conf/ztgw.yaml")
+    local gw_yaml_new = yaml.parse(yaml_config)
+    if not gw_yaml_new then
+        ngx.log(ngx.ERR, "failed to parse the content of file conf/gw.yaml")
         return
     end
 
-    ztgw_yaml = ztgw_yaml_new
-    ztgw_yaml_ctime = last_change_time
+    gw_yaml = gw_yaml_new
+    gw_yaml_ctime = last_change_time
 end
 
 
@@ -92,12 +93,12 @@ local function sync_data(self)
         return nil, "missing 'key' arguments"
     end
 
-    if not ztgw_yaml_ctime then
+    if not gw_yaml_ctime then
         ngx.log(ngx.WARN, "wait for more time")
-        return nil, "failed to read local file conf/ztgw.yaml"
+        return nil, "failed to read local file conf/gw.yaml"
     end
 
-    if self.conf_version == ztgw_yaml_ctime then
+    if self.conf_version == gw_yaml_ctime then
         return true
     end
 
@@ -115,7 +116,7 @@ local function sync_data(self)
         self.values = nil
     end
 
-    local items = ztgw_yaml[self.key] or {}
+    local items = gw_yaml[self.key] or {}
     self.values = new_tab(#items, 0)
     self.values_hash = new_tab(0, #items)
 
@@ -138,7 +139,7 @@ local function sync_data(self)
         end
 
         local key = item.id or "arr_" .. i
-        local conf_item = {value = item, modifiedIndex = ztgw_yaml_ctime,
+        local conf_item = {value = item, modifiedIndex = gw_yaml_ctime,
                            key = "/" .. self.key .. "/" .. key}
 
         if data_valid then
@@ -161,7 +162,7 @@ local function sync_data(self)
     end
 
     self.timestamp = ngx_time()
-    self.conf_version = ztgw_yaml_ctime
+    self.conf_version = gw_yaml_ctime
 
     return true
 end
@@ -177,14 +178,14 @@ local function _automatic_fetch(premature, self)
         local ok, ok2, err = pcall(sync_data, self)
         if not ok then
             err = ok2
-            ngx.log(ngx.ERR, "failed to fetch data from ztgw.yaml: ", err, ", ", tostring(self))
+            ngx.log(ngx.ERR, "failed to fetch data from gw.yaml: ", err, ", ", tostring(self))
             ngx_sleep(3)
             break
 
         elseif not ok2 and err then
             if err ~= "timeout" and err ~= "Key not found"
                     and self.last_err ~= err then
-                ngx.log(ngx.ERR, "failed to fetch data from ztgw.yaml: ", err, ", ", tostring(self))
+                ngx.log(ngx.ERR, "failed to fetch data from gw.yaml: ", err, ", ", tostring(self))
             end
 
             if err ~= self.last_err then
@@ -273,8 +274,8 @@ function _M.init_worker()
         return
     end
 
-    read_ztgw_yaml()
-    ngx.timer.every(1, read_ztgw_yaml)
+    read_gw_yaml()
+    ngx.timer.every(1, read_gw_yaml)
 end
 
 return _M

@@ -3,20 +3,20 @@ local print = print
 local execute = os.execute
 local stderr = io.stderr
 
-local ver  = require("ztgw.core.version")
-local util = require("ztgw.cli.util")
+local ver  = require("gw.core.version")
+local util = require("gw.cli.util")
 
 local _M = {}
 
 local function help()
     print([[
-Usage: ztgw [action] <argument>
+Usage: gw [action] <argument>
 
 help:       show this message, then exit
-start:      start the ztgw server
-stop:       stop the ztgw server
-restart:    restart the ztgw server
-version:    print the version of ztgw
+start:      start the gw server
+stop:       stop the gw server
+restart:    restart the gw server
+version:    print the version of gw
 ]])
 
 end

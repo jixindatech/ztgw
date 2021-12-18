@@ -9,10 +9,10 @@ local cjson = require("cjson.safe")
 local radixtree = require("resty.radixtree")
 local producer = require "resty.kafka.producer"
 local logger = require("resty.logger.socket")
-local schema = require("ztgw.schema")
-local config = require("ztgw.core.config")
-local request = require("ztgw.core.request")
-local aes   = require("ztgw.utils.aes")
+local schema = require("gw.schema")
+local config = require("gw.core.config")
+local request = require("gw.core.request")
+local aes   = require("gw.utils.aes")
 
 local ngx = ngx
 local ngx_time = ngx.time
@@ -21,7 +21,7 @@ local get_method = ngx.req.get_method
 local read_body = ngx.req.read_body
 local get_body =  ngx.req.get_body_data
 
-local gw_config = ngx.config.prefix() .. "etc/gw.yaml"
+local zt_config = ngx.config.prefix() .. "etc/zt.yaml"
 local cached_version
 local module = {}
 local module_name = "gw"
@@ -84,16 +84,16 @@ function _M.init_worker()
     end
 
     local attributes
-    attributes, err = lfs.attributes(gw_config)
+    attributes, err = lfs.attributes(zt_config)
     if not attributes then
-        ngx.log(ngx.ERR, "failed to fetch ", gw_config, " attributes: ", err)
+        ngx.log(ngx.ERR, "failed to fetch ", zt_config, " attributes: ", err)
         return
     end
 
     local f
-    f, err = io.open(gw_config, "r")
+    f, err = io.open(zt_config, "r")
     if not f then
-        ngx.log(ngx.ERR, "failed to open file ", gw_config, " : ", err)
+        ngx.log(ngx.ERR, "failed to open file ", zt_config, " : ", err)
         return err
     end
 
@@ -119,7 +119,7 @@ function _M.init_worker()
             return "kafka configuration is missing"
         end
 
-        kafka_topic = module.local_config.log.kafka.topic or "ztgw"
+        kafka_topic = module.local_config.log.kafka.topic or "gw"
     end
 
     forbidden_code = module.local_config.deny_code or 401

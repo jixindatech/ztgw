@@ -8,14 +8,14 @@ local cjson = require("cjson.safe")
 local ngx  = ngx
 local require = require
 local radixtree = require("resty.radixtree")
-local config = require("ztgw.core.config")
-local schema = require("ztgw.schema")
-local balancer = require("ztgw.router.balancer")
-local ip        = require("ztgw.utils.ip")
+local config = require("gw.core.config")
+local schema = require("gw.schema")
+local balancer = require("gw.router.balancer")
+local ip        = require("gw.utils.ip")
 
 local _M = {version = "0.1" }
 
-local module_name = "router"
+local module_name = "routes"
 local module
 
 local cached_version

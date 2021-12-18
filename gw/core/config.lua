@@ -1,8 +1,8 @@
 local require = require
 local io_open = io.open
 local yaml = require("tinyyaml")
-local config_redis = require("ztgw.core.config_redis")
-local config_yaml = require("ztgw.core.config_yaml")
+local config_redis = require("gw.core.config_redis")
+local config_yaml = require("gw.core.config_yaml")
 
 local _M = { version=0.1 }
 

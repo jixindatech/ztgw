@@ -18,7 +18,7 @@
 local cpath = package.cpath
 local path = package.path
 
-local home = "/usr/local/ztgw"
+local home = "/usr/local/gw"
 local pkg_cpath = home .. "/deps/lib64/lua/5.1/?.so;"
         .. home .. "/deps/lib/lua/5.1/?.so;"
 local pkg_path = home .. "/deps/share/lua/5.1/?.lua;"
@@ -28,8 +28,8 @@ package.cpath = pkg_cpath .. cpath
 package.path  = pkg_path .. path
 
 -- pass path to construct the final result
-local env = require("ztgw.cli.env")
-local ops = require("ztgw.cli.ops")
+local env = require("gw.cli.env")
+local ops = require("gw.cli.ops")
 
 local envs = env.get_envs(home, cpath, path)
 

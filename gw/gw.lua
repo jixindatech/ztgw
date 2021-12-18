@@ -5,13 +5,13 @@ local ngx     = ngx
 
 local balancer = require("ngx.balancer")
 
-local config      = require("ztgw.core.config")
-local yaml_config = require("ztgw.core.config_yaml")
-local ssl         = require("ztgw.ssl")
-local router      = require("ztgw.router")
-local upstream    = require("ztgw.upstream")
-local plugin      = require("ztgw.plugin")
-local log         = require("ztgw.log")
+local config      = require("gw.core.config")
+local yaml_config = require("gw.core.config_yaml")
+local ssl         = require("gw.ssl")
+local router      = require("gw.router")
+local upstream    = require("gw.upstream")
+local plugin      = require("gw.plugin")
+local log         = require("gw.log")
 
 local seed = ngx.time()
 
@@ -57,7 +57,7 @@ function _M.http_init_worker()
         ngx.log(ngx.ERR, "balancer init worker failed:" .. err)
     end
 
-    local ok, err = plugin.init_worker()
+    ok, err = plugin.init_worker()
     if err ~= nil then
         ngx.log(ngx.ERR, "gw init worker failed:" .. err)
     end
