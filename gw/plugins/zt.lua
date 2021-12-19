@@ -24,7 +24,7 @@ local get_body =  ngx.req.get_body_data
 local zt_config = ngx.config.prefix() .. "etc/zt.yaml"
 local cached_version
 local module = {}
-local module_name = "gw"
+local module_name = "zt"
 local header_token = "ZTGW-Token"
 local users = {}
 local forbidden_code
