@@ -71,7 +71,7 @@ local function push_host_router(route, host_routes, only_uri_routes)
                 "return " .. route.value.filter_func,
                 "router#" .. route.value.id)
         if not filter_fun then
-            core.log.error("failed to load filter function: ", err,
+            ngx.log(ngx.ERR, "failed to load filter function: ", err,
                     " route id: ", route.value.id)
             return
         end
