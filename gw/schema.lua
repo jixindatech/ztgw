@@ -40,18 +40,25 @@ _M.host_def = host_def
 _M.ssl = {
     type = "object",
     properties = {
-        cert = {
-            type = "string", minLength = 128, maxLength = 64*1024
-        },
-        key = {
-            type = "string", minLength = 128, maxLength = 64*1024
-        },
-        sni = {
-            type = "string",
-            pattern = [[^\*?[0-9a-zA-Z-.]+$]],
+        id = id_schema,
+        timestamp = id_schema,
+        config = {
+            type = "object",
+            properties = {
+                cert = {
+                    type = "string", minLength = 128, maxLength = 64*1024
+                },
+                key = {
+                    type = "string", minLength = 128, maxLength = 64*1024
+                },
+                sni = {
+                    type = "string",
+                    pattern = [[^\*?[0-9a-zA-Z-.]+$]],
+                }
+            }
         }
     },
-    required = {"sni", "key", "cert"},
+    required = {"id", "timestamp", "config"},
     additionalProperties = false,
 }
 
@@ -218,59 +225,74 @@ local health_checker = {
 local upstream_schema = {
     type = "object",
     properties = {
-        nodes = {
-            description = "nodes of upstream",
-            type = "object",
-            patternProperties = {
-                [".*"] = {
-                    description = "weight of node",
-                    type = "integer",
-                    minimum = 0,
-                }
-            },
-            minProperties = 1,
-        },
-        retries = {
-            type = "integer",
-            minimum = 1,
-        },
-        timeout = {
+        id = id_schema,
+        timestamp = id_schema,
+        config = {
             type = "object",
             properties = {
-                connect = {type = "number", minimum = 0},
-                send = {type = "number", minimum = 0},
-                read = {type = "number", minimum = 0},
-            },
-            required = {"connect", "send", "read"},
-        },
-        type = {
-            description = "algorithms of load balancing",
-            type = "string",
-            enum = {"chash", "roundrobin"}
-        },
-        checks = health_checker,
-        key = {
-            description = "the key of chash for dynamic load balancing",
-            type = "string",
-            pattern = [[^((uri|server_name|server_addr|request_uri|remote_port]]
-                    .. [[|remote_addr|query_string|host|hostname)]]
-                    .. [[|arg_[0-9a-zA-z_-]+)$]],
-        },
-        desc = {type = "string", maxLength = 256},
-        id = id_schema
+                nodes = {
+                    description = "nodes of upstream",
+                    type = "object",
+                    patternProperties = {
+                        [".*"] = {
+                            description = "weight of node",
+                            type = "integer",
+                            minimum = 0,
+                        }
+                    },
+                    minProperties = 1,
+                },
+                retries = {
+                    type = "integer",
+                    minimum = 1,
+                },
+                timeout = {
+                    type = "object",
+                    properties = {
+                        connect = {type = "number", minimum = 0},
+                        send = {type = "number", minimum = 0},
+                        read = {type = "number", minimum = 0},
+                    },
+                    required = {"connect", "send", "read"},
+                },
+                type = {
+                    description = "algorithms of load balancing",
+                    type = "string",
+                    enum = {"chash", "roundrobin"}
+                },
+                checks = health_checker,
+                key = {
+                    description = "the key of chash for dynamic load balancing",
+                    type = "string",
+                    pattern = [[^((uri|server_name|server_addr|request_uri|remote_port]]
+                            .. [[|remote_addr|query_string|host|hostname)]]
+                            .. [[|arg_[0-9a-zA-z_-]+)$]],
+                },
+                required = {"nodes", "type"}
+            }
+        }
     },
-    required = {"nodes", "type"},
+    required = {"id", "timestamp", "config"},
     additionalProperties = false,
 }
 
 _M.route = {
     type = "object",
     properties = {
-        host = host_def,
-        upstream_id = id_schema,
+        id = id_schema,
+        timestamp = id_schema,
+        config = {
+            type = "object",
+            properties = {
+                host = host_def,
+                uri = { type = "string" },
+                upstream_id = id_schema,
+                required = {"host", "uri", "upstream_id"}
+            }
+        }
     },
     anyOf = {
-        {required = {"upstream_id", "host"}},
+        {required = {"id", "timestamp", "config"}},
     },
     additionalProperties = false,
 }

@@ -45,27 +45,35 @@ local gw_schema = {
     type = "object",
     properties = {
         id = schema.id_shema,
-        name = user_email_def,
-        resources = {
-            type = "array",
-            items = {
-                type = "object",
-                properties = {
-                    host = {
-                        type = "string"
-                    },
-                    path = {
-                        type = "string"
-                    },
-                    methods = {
-                        type = "array",
-                        items = {
-                            type = "string"
+        timestamp = schema.id_shema,
+        config = {
+            type = "obejct",
+            properties = {
+                name = user_email_def,
+                resources = {
+                    type = "array",
+                    items = {
+                        type = "object",
+                        properties = {
+                            host = {
+                                type = "string"
+                            },
+                            path = {
+                                type = "string"
+                            },
+                            methods = {
+                                type = "array",
+                                items = {
+                                    type = "string"
+                                }
+                            },
+                            required= {"host", "path", "methods"}
                         }
                     }
                 }
             }
-        }
+        },
+        required = {"id", "timestamp", "config"}
     }
 }
 
@@ -280,7 +288,8 @@ function _M.access(ctx)
         match_opts.host = ctx.var.host
 
         local host = ctx.var.host
-        local ok, err = user.resources:dispatch(host:reverse(), match_opts, ctx)
+        local ok
+        ok, err = user.resources:dispatch(host:reverse(), match_opts, ctx)
         if ok and ctx.gw_matched then
             read_body()
             local body = get_body() or ""

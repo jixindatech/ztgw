@@ -5,7 +5,6 @@ local cjson        = require("cjson.safe")
 local new_tab      = table.new
 local tab_insert   = table.insert
 local setmetatable = setmetatable
-local xpcall       = xpcall
 local pcall        = pcall
 local type         = type
 local ipairs       = ipairs
@@ -30,14 +29,11 @@ local mt = {
     end
 }
 
-local modules = {}
-
 local gw_yaml
 local gw_yaml_ctime
 local gw_yaml_path  = ngx.config.prefix() .. "etc/gw.yaml"
 
 local function read_gw_yaml(pre_mtime)
-    ngx.log(ngx.ERR, gw_yaml_path)
     local attributes, err = lfs.attributes(gw_yaml_path)
     if not attributes then
         ngx.log(ngx.ERR, "failed to fetch ", gw_yaml_path, " attributes: ", err)
@@ -50,7 +46,8 @@ local function read_gw_yaml(pre_mtime)
         return
     end
 
-    local f, err = io.open(gw_yaml_path, "r")
+    local f
+    f, err = io.open(gw_yaml_path, "r")
     if not f then
         ngx.log(ngx.ERR, "failed to open file ", gw_yaml_path, " : ", err)
         return
@@ -102,9 +99,64 @@ local function sync_data(self)
         return true
     end
 
+
+    local items = gw_yaml[self.key] or {}
+    local values = new_tab(#items, 0)
+    local values_hash = new_tab(0, #items)
+
+    local err
+    for _, item in ipairs(items) do
+        local id = item.id
+        if id == nil then
+            ngx.log(ngx.ERR, "invalid data format, missing id")
+            return
+        end
+
+        local data_valid = true
+        if type(item) ~= "table" then
+            data_valid = false
+            ngx.log(ngx.ERR, "invalid item data of [", self.key .. "/" .. id,
+                    "], val: ", json.delay_encode(item),
+                    ", it shoud be a object")
+            return
+        end
+
+        if data_valid and self.schema then
+            data_valid, err = schema.check(self.schema, item)
+            if not data_valid then
+                ngx.log(ngx.ERR, "failed to check item data of [", self.key, "] err:", err, " ,val: ", json.encode(item.value))
+            end
+        end
+
+        local key =  "/" .. self.key .. "/" .. id
+        local origin_item = _M.get(self, key)
+        if origin_item ~= nil then
+            if origin_item.modifiedIndex == item.timestamp then
+                tab_insert(self.values, origin_item)
+                origin_item.release = false
+                goto CONTINUE
+            end
+        end
+
+        local conf_item = {value = item.config, modifiedIndex = item.timestamp, key = key}
+
+        if data_valid then
+            tab_insert(values, conf_item)
+            local item_id = tostring(item.id)
+            values_hash[item_id] = #values
+            conf_item.value.id = item_id
+            conf_item.value.clean_handlers = {}
+
+            if self.init_func then
+                self.init_func(conf_item)
+            end
+        end
+        ::CONTINUE::
+    end
+
     if self.values then
         for _, item in ipairs(self.values) do
-            if item.value then
+            if item.value and item.release then
                 if item.value.clean_handlers then
                     for _, clean_handler in ipairs(item.value.clean_handlers) do
                         clean_handler(item)
@@ -116,50 +168,8 @@ local function sync_data(self)
         self.values = nil
     end
 
-    local items = gw_yaml[self.key] or {}
-    self.values = new_tab(#items, 0)
-    self.values_hash = new_tab(0, #items)
-
-    local err
-    for i, item in ipairs(items) do
-        local id = tostring(i)
-        local data_valid = true
-        if type(item) ~= "table" then
-            data_valid = false
-            ngx.log(ngx.ERR, "invalid item data of [", self.key .. "/" .. id,
-                "], val: ", json.delay_encode(item),
-                ", it shoud be a object")
-        end
-
-        if data_valid and self.schema then
-            data_valid, err = schema.check(self.schema, item)
-            if not data_valid then
-                ngx.log(ngx.ERR, "failed to check item data of [", self.key, "] err:", err, " ,val: ", json.encode(item.value))
-            end
-        end
-
-        local key = item.id or "arr_" .. i
-        local conf_item = {value = item, modifiedIndex = gw_yaml_ctime,
-                           key = "/" .. self.key .. "/" .. key}
-
-        if data_valid then
-            tab_insert(self.values, conf_item)
-            local item_id = conf_item.value.id or self.key .. "#" .. id
-            item_id = tostring(item_id)
-            self.values_hash[item_id] = #self.values
-            conf_item.value.id = item_id
-            conf_item.value.clean_handlers = {}
-            ngx.log(ngx.ERR, cjson.encode(conf_item))
-
-            if self.init_func then
-                self.init_func(conf_item)
-            end
-        end
-    end
-
-    if self.filter then
-        self.filter(items)
-    end
+    self.values = values
+    self.values_hash = values_hash
 
     self.timestamp = ngx_time()
     self.conf_version = gw_yaml_ctime
@@ -232,10 +242,8 @@ function _M.new(name, config, options)
     local automatic = options and options.automatic
     local interval = options and options.interval
     local init_func = options and options.init_func
-    local schema = options and options.schema
+    local module_schema = options and options.schema
     local conf_version = options and options.conf_version
-
-    ngx.log(ngx.ERR, "module name:" .. name)
 
     local module = setmetatable({
         name = name,
@@ -248,7 +256,7 @@ function _M.new(name, config, options)
         running = true,
         conf_version = conf_version,
         value = nil,
-        schema = schema,
+        schema = module_schema,
         init_func = init_func,
         last_err = nil,
         last_err_time = nil,

@@ -1,6 +1,5 @@
 local setmetatable = setmetatable
 local require      = require
-local xpcall       = xpcall
 local pcall        = pcall
 local ipairs       = ipairs
 local new_tab      = table.new
@@ -42,9 +41,10 @@ local function get_redis_cli(config)
     end
 
     if config.password then
-        local count, err = redis_cli:get_reused_times()
+        local count
+        count, err = redis_cli:get_reused_times()
         if count == 0 then
-            local ok, err = redis_cli:auth(config.password)
+            ok, err = redis_cli:auth(config.password)
             if not ok then
                 return nil, err
             end
@@ -68,7 +68,8 @@ local function sync_data(self)
         return err
     end
 
-    local res, err = redis_cli:get(self.key)
+    local res
+    res, err = redis_cli:get(self.key)
     if not res then
         ngx.log(ngx.ERR, "failed to get:" .. self.key .." from redis")
         return err
@@ -81,7 +82,8 @@ local function sync_data(self)
 
     local timeout = redis_config.timeout or 5000
     local pool_num = redis_config.size or 100
-    local ok, err = redis_cli:set_keepalive(timeout, pool_num)
+    local ok
+    ok, err = redis_cli:set_keepalive(timeout, pool_num)
     if not ok then
         return nil, err
     end
