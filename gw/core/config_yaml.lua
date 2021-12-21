@@ -128,13 +128,15 @@ local function sync_data(self)
             end
         end
 
-        local key =  "/" .. self.key .. "/" .. id
+        local key = "/" .. self.key .."/" .. id
         local origin_item = _M.get(self, key)
         if origin_item ~= nil then
             if origin_item.modifiedIndex == item.timestamp then
-                tab_insert(self.values, origin_item)
-                origin_item.release = false
+                tab_insert(values, origin_item)
+                values_hash[key] = #values
                 goto CONTINUE
+            else
+                origin_item.release = true
             end
         end
 
@@ -142,15 +144,17 @@ local function sync_data(self)
 
         if data_valid then
             tab_insert(values, conf_item)
-            local item_id = tostring(item.id)
-            values_hash[item_id] = #values
-            conf_item.value.id = item_id
+            values_hash[key] = #values
+            conf_item.value.id = tostring(item.id)
             conf_item.value.clean_handlers = {}
 
             if self.init_func then
                 self.init_func(conf_item)
             end
         end
+
+        --ngx.log(ngx.ERR, cjson.encode(conf_item))
+
         ::CONTINUE::
     end
 
@@ -225,12 +229,13 @@ function _M.fetch_created_obj(key)
     return created_obj[key]
 end
 
-function _M.get(self, key)
+function _M.get(self, id)
     if not self.values_hash then
         return
     end
 
-    local arr_idx = self.values_hash[tostring(key)]
+    local key = "/" .. self.key .. "/" .. id
+    local arr_idx = self.values_hash[key]
     if not arr_idx then
         return nil
     end
@@ -244,7 +249,7 @@ function _M.new(name, config, options)
     local init_func = options and options.init_func
     local module_schema = options and options.schema
     local conf_version = options and options.conf_version
-
+    --ngx.log(ngx.ERR, "module name:" .. name)
     local module = setmetatable({
         name = name,
         key = name,
